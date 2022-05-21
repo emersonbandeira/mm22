@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy.orm import relationship
 from config import Base
 
 class User(Base):
@@ -9,6 +10,7 @@ class User(Base):
     name = Column(String)
     email = Column(String)
     password = Column(String)
+    profile_id = Column(Integer, ForeignKey('profile.id'))
 
     def __repr__(self):
         return "<User(name='%s', email='%s', public_id='%s')>" % (
