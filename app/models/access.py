@@ -1,3 +1,4 @@
+from cgitb import text
 from datetime import date
 from MySQLdb import Timestamp
 from sqlalchemy import Column, Integer, String, TIMESTAMP, ForeignKey
@@ -7,7 +8,7 @@ class Access(Base):
     __tablename__ = 'access'
 
     id = Column(Integer, primary_key=True)
-    timestamp = Column(TIMESTAMP)
+    timestamped = Column(TIMESTAMP)
     IP = Column(String)
     user_id = Column(Integer, ForeignKey('user.id'))
 

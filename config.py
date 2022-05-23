@@ -8,14 +8,15 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 #from urlquote import quote
-from urllib.parse import quote 
+from urllib.parse import quote
+ 
 
 BASE_DIR = os.path.abspath('.')
 
 DEBUG = config('DEBUG', cast=bool)
 
-#SECRET_KEY = config('SECRET_KEY') or \
-#    ''.join(random.choice(string.ascii_letters) for i in range(42))
+SECRET_KEY = config('SECRET_KEY') or \
+    ''.join(random.choice(string.ascii_letters) for i in range(42))
 
 
 SQLALCHEMY_DATABASE_URI=('mysql://meme%s@localhost:3306/mm22' % quote('badpass'))
@@ -38,3 +39,5 @@ logging.warning('session {}'.format(session) )
 #                              host='localhost',
 #                              database='mm22')
 #    return cnx
+
+
