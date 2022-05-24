@@ -1,5 +1,12 @@
 flask==2.1.2
-pyjwt==2.3.0
-python-decouple==3.6
 datetime
 uuid
+six
+pyjwt==2.3.0
+python-decouple
+SQLAlchemy==1.4.36
+mysqlclient
+urlquote
+Flask-WTF
+WTForms
+Flask-HTTPAuth
