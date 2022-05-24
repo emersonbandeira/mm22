@@ -1,17 +1,14 @@
-from sqlite3 import Timestamp
 from app import app
-from flask import jsonify, request, make_response
-from crypt import methods
+from flask import jsonify, request, make_response, render_template, redirect, flash, session, url_for, g
 from werkzeug.security import generate_password_hash,check_password_hash
-from lib2to3.refactor import RefactoringTool
-from app.models import servico_usuario
 from app.models.profile import Profile
-from config import session
+from config import mysql_session
 import logging
 from functools import wraps
 import jwt
 import datetime
 import uuid
+
 from app.models.user import User
 from app.models.access import Access
 
@@ -41,40 +38,57 @@ def token_required(f):
      
      return decorator
 
+
 @app.route( '/', methods=['GET'])
-def root():
-     return jsonify({'message':'Hello!'})
+@app.route('/index')
+def index():
+     if session:
 
-@app.route('/cadastrar', methods=['POST'])
-def cadastrar():
-     email = request.args.get('email')
-     nome = request.args.get('nome')
-     senha = request.args.get('senha')
-     retorno = servico_usuario.cadastrar_usuario(email, nome, senha)
-     return retorno
+          if session['public_id']:
+               current_user = mysql_session.query(User).filter_by(public_id=session['public_id']).first()
+          
+               return render_template('index.html', user=current_user)
+          
+     return render_template('index.html')
 
-@app.route('/usuario', methods=['POST', 'GET'])
-def obtem_usuario():
-    
-     retorno = jsonify({'message':'Usuário inválido!'})
+@app.route('/login', methods=('GET', 'POST'))
+def login():
+     if request.method == 'POST':
 
-     id = request.args.get('id')
-     logging.warning('obtem_usuario {}'.format(id))
+          if not request.form['username'] or not request.form['password']:
+               return render_template('login.html')
+           
+          username = request.form['username']
+          password = request.form['password']
+          logging.warning('password: {}'.format(password))
+          user = mysql_session.query(User).filter_by(name=username).first()
 
-     if id:
-          logging.warning('recuperar: {}'.format(id))
-          retorno = servico_usuario.obtem_usuario(id)
+          if user:
+
+               if check_password_hash(user.password, password):
+                    acesso = Access()
+                    acesso.IP = request.environ.get('HTTP_X_REAL_IP', request.remote_addr) 
+                    acesso.user_id = user.id
+                    acesso.timestamped = datetime.datetime.now()
+                    mysql_session.add(acesso)
+                    mysql_session.commit()
+                    session.clear()
+                    session['public_id'] = user.public_id
+                    g.user = user
+                    logging.warning('login sucesso')
+                    flash('Login com sucesso!')
+
+                    return redirect(url_for('index'))
+          else:
+               flash('Login falhou!')
+     g.user = None
      
-     return retorno
+     return render_template('login.html')
 
-@app.route('/usuarios', methods=['POST', 'GET'])
-def obtem_usuarios():
-
-     logging.warning('obtem_usuarios ')
-
-     retorno = servico_usuario.obtem_usuarios()
-     
-     return retorno
+@app.route('/logout', methods=['GET','POST'])
+def logout():
+     session.clear()
+     return redirect(url_for('index'))
 
 
 @token_required
@@ -85,7 +99,6 @@ def testerec():
      return jsonify({'message':'testerec'})
 
 
-
 @app.route('/user', methods=['POST'])
 def user():
      retorno = ''
@@ -94,11 +107,11 @@ def user():
      id_parm = request.args.get('id')
 
      if user:
-          our_user = session.query(User).filter_by(name=user).first()
+          our_user = mysql_session.query(User).filter_by(name=user).first()
           logging.warning(our_user.name)
 
      elif id:
-          our_user = session.query(User).filter_by(id=id_parm).first()
+          our_user = mysql_session.query(User).filter_by(id=id_parm).first()
           logging.warning(our_user.name)
 
      if our_user:
@@ -107,8 +120,8 @@ def user():
      return retorno
 
 
-@app.route('/register', methods=['POST'])
-def register():
+@app.route('/service-register', methods=['POST'])
+def service_register():
      retorno = ''
 
      password = request.args.get('password')
@@ -124,13 +137,13 @@ def register():
      profile.id = 2
      user.profile = profile
 
-     session.add(user)
-     session.commit()
+     mysql_session.add(user)
+     mysql_session.commit()
 
      return jsonify({'message':'Sucess!'})
      
-@app.route('/login', methods=['POST'])
-def login():
+@app.route('/service_login', methods=['POST'])
+def service_login():
      retorno = ''
 
      auth = request.authorization
@@ -138,9 +151,8 @@ def login():
      if not auth or not auth.username or not auth.password: 
        return make_response('could not verify', 401, {'Authentication': 'login required"'})   
  
-     user = session.query(User).filter_by(name=auth.username).first()
+     user = mysql_session.query(User).filter_by(name=auth.username).first()
 
-     hashed_pass = generate_password_hash(auth.password)
      logging.warning('user.name: {}'.format(user.name))
 
      if check_password_hash(user.password, auth.password):
@@ -149,10 +161,12 @@ def login():
           acesso.IP = request.environ.get('HTTP_X_REAL_IP', request.remote_addr) 
           acesso.user_id = user.id
           acesso.timestamped = datetime.datetime.now()
-          session.add(acesso)
-          session.commit()
+          mysql_session.add(acesso)
+          mysql_session.commit()
 
           return jsonify({'token' : token})
  
      return make_response('could not verify',  401, {'Authentication': '"login required"'})
+
+
 
