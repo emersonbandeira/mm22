@@ -11,6 +11,7 @@ import uuid
 
 from app.models.user import User
 from app.models.access import Access
+from app.forms import RegistrationForm
 
 
 
@@ -90,6 +91,30 @@ def logout():
      session.clear()
      return redirect(url_for('index'))
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+     logging.warning('register...')
+     form = RegistrationForm(request.form)
+     if request.method == 'POST' and form.validate():
+          user = User()
+          user.public_id = str(uuid.uuid4())
+          user.name = form.username.data
+          user.email = form.email.data
+          user.password = generate_password_hash(form.password.data)
+          user.accept_tos = form.accept_tos.data
+          user.profile_id = 2
+          mysql_session.add(user)
+          mysql_session.commit()
+          flash('Thanks for registering')
+          return redirect(url_for('login'))
+
+     logging.warning('method get')
+     return render_template('register.html', form=form)
+
+#
+#    rest service 
+#
+
 
 @token_required
 @app.route('/testerec', methods=['POST'])
@@ -142,7 +167,7 @@ def service_register():
 
      return jsonify({'message':'Sucess!'})
      
-@app.route('/service_login', methods=['POST'])
+@app.route('/service-login', methods=['POST'])
 def service_login():
      retorno = ''
 

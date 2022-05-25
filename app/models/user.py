@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, ForeignKey
+from xmlrpc.client import Boolean
+from sqlalchemy import Column, Integer, String,  ForeignKey
 from sqlalchemy.orm import relationship
 from config import Base
 
@@ -10,6 +11,7 @@ class User(Base):
     name = Column(String)
     email = Column(String)
     password = Column(String)
+    accept_tos = Column(Integer)
     profile_id = Column(Integer, ForeignKey('profile.id'))
 
     def __repr__(self):
