@@ -11,7 +11,7 @@ import uuid
 
 from app.models.user import User
 from app.models.access import Access
-from app.forms import RegistrationForm
+from app.forms import RegistrationForm, ProfileForm
 
 
 
@@ -110,6 +110,50 @@ def register():
 
      logging.warning('method get')
      return render_template('register.html', form=form)
+
+
+@app.route('/profile', methods=['GET','POST'])
+def profile():
+     form = ProfileForm(request.form)
+     profiles = mysql_session.query(Profile)
+
+     if request.method == 'POST' and form.validate():
+          profile = Profile()
+          profile.name = form.name.data
+          profile.description = form.description.data
+          mysql_session.add(profile)
+          mysql_session.commit()
+          flash('Perfil adicionado')
+          return redirect(url_for('profile'))
+
+
+     logging.warning('method get')
+     return render_template('profile.html', form=form, profiles=profiles)
+
+@app.route('/profile-edit/<id>', methods=['GET','POST'])
+def profile_edit(id):
+
+     form = ProfileForm()
+     profiles = mysql_session.query(Profile)
+
+     if request.method == 'GET' and id:
+
+          profile = mysql_session.query(Profile).filter_by(id=id).first()
+
+          logging.warning('profile.name: [{}]'.format(profile.name))
+
+          form.name.data = profile.name
+          form.description.data = profile.description
+
+          render_template('profile.html', form=form, profiles=profiles)
+
+     if request.method == 'POST' and form.validate:
+          form = ProfileForm(request.form)
+          mysql_session.add(profile)
+          mysql_session.commit()
+          return redirect(url_for('profile'))
+
+     return render_template('profile.html', form=form, profiles=profiles)
 
 #
 #    rest service 

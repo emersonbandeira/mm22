@@ -19,3 +19,7 @@ class RegistrationForm(Form):
     confirm = PasswordField('Repeat Password')
     accept_tos = BooleanField('I accept the TOS', [validators.DataRequired()])
     profile_id = IntegerField('Profile')
+
+class ProfileForm(Form):
+    name = StringField('Nome', [validators.Length(min=4, max=25)])
+    description = StringField('Descrição', [validators.Length(min=4, max=31)])

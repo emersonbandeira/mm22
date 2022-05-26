@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Perfil{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+
+{% from "_formhelpers.html" import render_field %}
+<form method=post>
+  <dl>
+    {{ render_field(form.name) }}
+    {{ render_field(form.description) }}
+  </dl>
+  <p><input type=submit value=Salvar>
+</form>
+
+<hr>
+
+<h1> Perfis cadastrados </h1>
+    <hr>
+    <ul>
+        {% for profile in profiles %}
+        <li>
+            <h3>{{ profile.name }}</h3>
+            <span>{{ profile.description }}</span> 
+            <a href="{{ url_for('profile_edit', id=profile.id) }}">
+                <span>Editar</span>
+            </a>
+            <hr>    
+        </li>
+        {% endfor %}
+    </ul>
+{% endblock %}
