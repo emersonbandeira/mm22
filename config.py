@@ -31,8 +31,6 @@ logging.warning('session {}'.format(mysql_session) )
 
 MAIL_SERVER='smtp.gmail.com'
 MAIL_PORT=465
-MAIL_USERNAME='devmmbr@gmail.com'
-MAIL_PASSWORD='mmpwdzero@nove'
 MAIL_USE_TLS=False
 MAIL_USE_SSL=True
 

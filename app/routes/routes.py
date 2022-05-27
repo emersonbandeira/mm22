@@ -111,7 +111,7 @@ def register():
 
 
      
-          msg = Message('Usuário cadastrado', sender =   'devmmbr@gmail.com', recipients = [user.email])
+          msg = Message('Usuário cadastrado', sender =   SENDER_MAIL, recipients = [user.email])
           msg.body = "O usuário {} cadastrado pela web em {} informando este email. Para confirmar abra no navegador http://{}:5000{}".format(user.name, user.created, MY_IP, url_for('activation',key=user.public_id))
           mail.send(msg)
 
