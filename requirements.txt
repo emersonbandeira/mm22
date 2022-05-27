@@ -1,11 +1,12 @@
 flask==2.1.2
+Flask-Mail
 datetime
 uuid
 six
+mysqlclient
+SQLAlchemy==1.4.36
 pyjwt==2.3.0
 python-decouple
-SQLAlchemy==1.4.36
-mysqlclient
 urlquote
 Flask-WTF
 WTForms

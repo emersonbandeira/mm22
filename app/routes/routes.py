@@ -1,8 +1,9 @@
 from app import app
 from flask import jsonify, request, make_response, render_template, redirect, flash, session, url_for, g
+from flask_mail import Message
 from werkzeug.security import generate_password_hash,check_password_hash
 from app.models.profile import Profile
-from config import mysql_session
+from config import MY_IP, mysql_session
 import logging
 from functools import wraps
 import jwt
@@ -12,6 +13,7 @@ import uuid
 from app.models.user import User
 from app.models.access import Access
 from app.forms import RegistrationForm, ProfileForm
+from app import mail
 
 
 
@@ -102,10 +104,18 @@ def register():
           user.email = form.email.data
           user.password = generate_password_hash(form.password.data)
           user.accept_tos = form.accept_tos.data
-          user.profile_id = 2
+          user.profile_id = 3 #cliente
+          user.created = datetime.datetime.now()
           mysql_session.add(user)
           mysql_session.commit()
-          flash('Thanks for registering')
+
+
+     
+          msg = Message('Usuário cadastrado', sender =   'devmmbr@gmail.com', recipients = [user.email])
+          msg.body = "O usuário {} cadastrado pela web em {} informando este email. Para confirmar abra no navegador http://{}:5000{}".format(user.name, user.created, MY_IP, url_for('activation',key=user.public_id))
+          mail.send(msg)
+
+          flash('Obrigado pelo cadastro!')
           return redirect(url_for('login'))
 
      logging.warning('method get')
@@ -154,6 +164,23 @@ def profile_edit(id):
           return redirect(url_for('profile'))
 
      return render_template('profile.html', form=form, profiles=profiles)
+
+@app.route('/activation/<key>', methods=['GET'])
+def activation(key):
+     logging.warning('activation {}'.format(key))
+     user = mysql_session.query(User).filter_by(public_id=key).first()
+     
+
+
+     if user:
+          user.activated = datetime.datetime.now()
+          mysql_session.add(user)
+          mysql_session.commit()
+          flash('Usuário ativado com sucesso!')
+          return redirect(url_for('login'))
+
+     return render_template('index.html')
+
 
 #
 #    rest service 
