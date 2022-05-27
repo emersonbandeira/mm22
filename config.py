@@ -8,11 +8,16 @@ from urllib.parse import quote
 import socket
 
 
-BASE_DIR = os.path.abspath('.')
+BASE_DIR=os.path.abspath('.')
 
-DEBUG = config('DEBUG', cast=bool)
+DEBUG=config('DEBUG', cast=bool)
 
-SECRET_KEY = config('SECRET_KEY') 
+SECRET_KEY=config('SECRET_KEY') 
+
+SENDER_MAIL=config('SENDER_MAIL')
+
+MAIL_USERNAME=config('MAIL_USERNAME')
+MAIL_PASSWORD=config('MAIL_PASSWORD')
 
 
 SQLALCHEMY_DATABASE_URI=('mysql://meme%s@localhost:3306/mm22' % quote('badpass'))
