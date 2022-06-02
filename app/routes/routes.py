@@ -1,5 +1,5 @@
 from app import app
-from flask import jsonify, request, make_response, render_template, redirect, flash, session, url_for, g
+from flask import jsonify, request, make_response, render_template, redirect, flash, session, url_for, g, abort
 from flask_mail import Message
 from werkzeug.security import generate_password_hash,check_password_hash
 from app.models.profile import Profile
@@ -15,7 +15,7 @@ from app.models.user import User
 from app.models.access import Access
 from app.forms import RegistrationForm, ProfileForm, LoginForm
 from app import mail
-
+from app.utils import get_redirect_target, is_safe_url, redirect_back
 
 
 def token_required(f):
@@ -85,7 +85,14 @@ def login():
                     logging.warning('login sucesso')
                     flash('Login com sucesso!')
 
-                    return redirect(url_for('index'))
+                    next = request.args.get('next')
+                    # is_safe_url should check if the url is safe for redirects.
+                    # See http://flask.pocoo.org/snippets/62/ for an example.
+                    if not is_safe_url(next):
+                         return abort(400)
+
+                    return redirect(next or url_for('index'))
+
           else:
                flash('Login falhou!')
      g.user = None

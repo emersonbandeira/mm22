@@ -4,7 +4,6 @@ from flask_mail import Mail
 from flask_login import LoginManager, login_manager
 from app.models.user import User
 from config import mysql_session
-from flask_bootstrap import Bootstrap
 
 
 
