@@ -1,5 +1,6 @@
 flask==2.1.2
 Flask-Mail
+Flask-Login
 datetime
 uuid
 six

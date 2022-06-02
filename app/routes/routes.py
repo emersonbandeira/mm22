@@ -9,22 +9,26 @@ from functools import wraps
 import jwt
 import datetime
 import uuid
+from flask_login import current_user, login_required, login_user, logout_user
 
 from app.models.user import User
 from app.models.access import Access
-from app.forms import RegistrationForm, ProfileForm
+from app.forms import RegistrationForm, ProfileForm, LoginForm
 from app import mail
 
 
 
 def token_required(f):
+
+     logging.warning('token_required... 1')
+
      @wraps(f)
      def decorator(*args, **kwargs):
           token = None
           if 'x-access-tokens' in request.headers:
                token = request.headers['x-access-tokens']
 
-          logging.warning('token_required')
+          logging.warning('token_required... 2')
 
           if not token:
                return jsonify({'message': 'a valid token is missing'})
@@ -32,7 +36,7 @@ def token_required(f):
                data = jwt.decode(token, app.config['SECRET_KEY'], algorithms=["HS256"])
                current_user = session.query(User).filter_by(public_id=data['public_id']).first()
 
-               logging.warning('public_id2: [{}]'.format(data.get('public_id')))
+               logging.warning('public_id: [{}]'.format(data.get('public_id')))
 
           except:
                return jsonify({'message': 'token is invalid'})
@@ -44,40 +48,40 @@ def token_required(f):
 
 @app.route( '/', methods=['GET'])
 @app.route('/index')
+@login_required
 def index():
-     if session:
-
-          if session['public_id']:
-               current_user = mysql_session.query(User).filter_by(public_id=session['public_id']).first()
-          
-               return render_template('index.html', user=current_user)
-          
-     return render_template('index.html')
+     IP = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)        
+     logging.warning('cuser: [{}] ({})'.format(current_user.name, IP))
+     return render_template('index.html',IP=IP)
 
 @app.route('/login', methods=('GET', 'POST'))
 def login():
-     if request.method == 'POST':
+
+     form = LoginForm(request.form)
+     logging.warning('login iniciou...')
+
+     if request.method == 'POST' and form.validate():
 
           if not request.form['username'] or not request.form['password']:
-               return render_template('login.html')
+               return render_template('login.html', form=form)
            
-          username = request.form['username']
-          password = request.form['password']
-          logging.warning('password: {}'.format(password))
+          username = form.username.data
+          password = form.password.data 
+          logging.warning('username: [{}] password: [{}]'.format(username,password))
+          
           user = mysql_session.query(User).filter_by(name=username).first()
 
           if user:
 
                if check_password_hash(user.password, password):
+                    token = jwt.encode({'public_id' : user.public_id, 'exp' : datetime.datetime.utcnow() + datetime.timedelta(minutes=45)}, app.config['SECRET_KEY'], "HS256")
                     acesso = Access()
                     acesso.IP = request.environ.get('HTTP_X_REAL_IP', request.remote_addr) 
                     acesso.user_id = user.id
                     acesso.timestamped = datetime.datetime.now()
                     mysql_session.add(acesso)
                     mysql_session.commit()
-                    session.clear()
-                    session['public_id'] = user.public_id
-                    g.user = user
+                    login_user(user)
                     logging.warning('login sucesso')
                     flash('Login com sucesso!')
 
@@ -86,12 +90,12 @@ def login():
                flash('Login falhou!')
      g.user = None
      
-     return render_template('login.html')
+     return render_template('login.html', form=form)
 
 @app.route('/logout', methods=['GET','POST'])
 def logout():
-     session.clear()
-     return redirect(url_for('index'))
+     logout_user()
+     return redirect(url_for('login'))
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -108,8 +112,6 @@ def register():
           user.created = datetime.datetime.now()
           mysql_session.add(user)
           mysql_session.commit()
-
-
      
           msg = Message('Usuário cadastrado', sender =   SENDER_MAIL, recipients = [user.email])
           msg.body = "O usuário {} cadastrado pela web em {} informando este email. Para confirmar abra no navegador http://{}:5000{}".format(user.name, user.created, MY_IP, url_for('activation',key=user.public_id))
@@ -140,7 +142,9 @@ def profile():
      logging.warning('method get')
      return render_template('profile.html', form=form, profiles=profiles)
 
+
 @app.route('/profile-edit/<id>', methods=['GET','POST'])
+@token_required
 def profile_edit(id):
 
      form = ProfileForm()

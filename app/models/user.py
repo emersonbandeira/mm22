@@ -1,6 +1,4 @@
-from xmlrpc.client import Boolean
-from sqlalchemy import Column, Integer, String,  ForeignKey, TIMESTAMP
-from sqlalchemy.orm import relationship
+from sqlalchemy import Column, Integer, String,  ForeignKey, TIMESTAMP, Boolean
 from config import Base
 
 class User(Base):
@@ -19,3 +17,16 @@ class User(Base):
     def __repr__(self):
         return "<User(name='%s', email='%s', public_id='%s')>" % (
                             self.name, self.email, self.public_id)
+
+    def is_authenticated(self):
+        return True
+
+    def is_active(self):   
+        return True           
+
+    def is_anonymous(self):
+        return False      
+    
+    def get_id(self):
+        return str(self.public_id)
+    
