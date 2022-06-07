@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Acessos{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+<div>
+    <img src="/access-graph.png" alt="Access graph">
+</div>
+<br>
+<h1> Lista </h1>
+    <hr>
+    <ul>
+        {% for acesso in lista_acessos %}
+        <li>
+            <h3>{{ acesso['username'] }}</h3>
+            <span>{{ acesso['ip'] }}</span> 
+            <span>{{ acesso['timestamped'] }}</span> 
+            <span>{{ acesso['count'] }}</span> 
+            <hr>    
+        </li>
+        {% endfor %}
+    </ul>
+
+{% endblock %}

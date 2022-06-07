@@ -1,5 +1,8 @@
+import collections
+from ctypes import sizeof
+from tokenize import PlainToken
 from app import app
-from flask import jsonify, request, make_response, render_template, redirect, flash, session, url_for, g, abort
+from flask import jsonify, request, make_response, render_template, redirect, flash, session, url_for, g, abort, Response
 from flask_mail import Message
 from werkzeug.security import generate_password_hash,check_password_hash
 from app.models.profile import Profile
@@ -10,6 +13,12 @@ import jwt
 import datetime
 import uuid
 from flask_login import current_user, login_required, login_user, logout_user
+from sqlalchemy import func
+
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+import matplotlib.pyplot as plt
+import numpy as np
+import io
 
 from app.models.user import User
 from app.models.access import Access
@@ -192,7 +201,83 @@ def activation(key):
 
      return render_template('index.html')
 
+@app.route('/access')
+def access():
+     acessos = mysql_session.query(func.date(Access.timestamped), Access.IP, User.name, func.count(func.date(Access.timestamped))).outerjoin(User).group_by(func.date(Access.timestamped), Access.IP, User.name).all()
 
+     logging.warning(acessos)
+
+     lista_acessos = []
+     dias = []
+
+     for acesso in acessos:
+
+          #user = mysql_session.query(User).filter_by(id=acesso.user_id).first()
+
+          a = collections.OrderedDict()
+          #a['usuario'] = acesso.name
+          a['timestamped'] = acesso[0]
+          a['ip'] = acesso[1]
+          a['username'] = acesso[2]
+          a['count'] = acesso[3]
+          lista_acessos.append(a)
+          dias.append(acesso[0])
+     
+     logging.warning('lista: [{}]'.format(lista_acessos)) 
+
+     logging.warning('dias: [{}]'.format(dias))
+     
+         
+
+     return render_template('access.html',lista_acessos=lista_acessos)
+
+@app.route('/access-graph.png')
+def access_graph():
+
+     acessos = mysql_session.query(func.date(Access.timestamped), func.count(func.date(Access.timestamped))).outerjoin(User).group_by(func.date(Access.timestamped), Access.IP, User.name).all()
+
+     lista_acessos = []
+     dias = []
+     qtd_acessos = []
+     qtd_dias = 0
+
+     for acesso in acessos:
+
+          a = collections.OrderedDict()
+          a['timestamped'] = acesso[0]
+          a['count'] = acesso[1]
+          lista_acessos.append(a)
+          dias.append(acesso[0])
+          qtd_acessos.append(acesso[1])
+          qtd_dias+=1
+
+     ax = plt.subplots()
+
+     logging.warning('dias: [{}] {}'.format(dias, qtd_dias))
+
+     ind = np.arange(qtd_dias)
+
+     
+
+     plt.bar(ind, qtd_acessos, 0.35, yerr=0, label='Acessos')
+
+     plt.axhline(0,color='grey', linewidth=0.8)
+     plt.ylabel('Quantidade')
+     plt.title('Acessos por dia')
+     plt.xticks(ind, labels=dias)
+     plt.legend()
+
+
+
+     output = io.BytesIO()
+
+     plt.savefig(output)
+     
+     #FigureCanvas(plt.streamplot()).print_png(output)
+
+     return Response(output.getvalue(), mimetype='image/png')
+     
+     #return plt.show()
 #
 #    rest service 
 #
