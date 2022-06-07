@@ -1,7 +1,7 @@
 import logging
 import os
 from decouple import config
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, func
 from sqlalchemy.orm import declarative_base
 from sqlalchemy.orm import sessionmaker
 from urllib.parse import quote
@@ -40,3 +40,4 @@ MAIL_USE_TLS=False
 MAIL_USE_SSL=True
 
 MY_IP = "127.0.0.1" #socket.gethostbyname(socket.gethostname())
+

@@ -12,3 +12,4 @@ urlquote
 Flask-WTF
 WTForms
 Flask-HTTPAuth
+matplotlib
