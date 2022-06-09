@@ -9,15 +9,15 @@
     <img src="/access-graph.png" alt="Access graph">
 </div>
 <br>
-<h1> Lista </h1>
+<h1> Analítico </h1>
     <hr>
     <ul>
         {% for acesso in lista_acessos %}
         <li>
-            <h3>{{ acesso['username'] }}</h3>
-            <span>{{ acesso['ip'] }}</span> 
+            <h3>@{{ acesso['username'] }}</h3>
+            <span>[{{ acesso['ip'] }}]</span> 
             <span>{{ acesso['timestamped'] }}</span> 
-            <span>{{ acesso['count'] }}</span> 
+            <span>({{ acesso['count'] }})</span> 
             <hr>    
         </li>
         {% endfor %}

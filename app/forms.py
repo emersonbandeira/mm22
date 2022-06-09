@@ -1,4 +1,4 @@
-from wtforms import  Form, BooleanField, StringField, PasswordField, SubmitField, IntegerField, validators 
+from wtforms import  Form, BooleanField, StringField, PasswordField, SubmitField, IntegerField, validators, FileField 
 from wtforms.validators import DataRequired
 
 
@@ -20,3 +20,6 @@ class RegistrationForm(Form):
 class ProfileForm(Form):
     name = StringField('Nome', [validators.Length(min=4, max=25)])
     description = StringField('Descrição', [validators.Length(min=4, max=31)])
+
+class UserUpdateForm(Form):
+    file = FileField('file')

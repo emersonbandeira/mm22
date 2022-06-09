@@ -1,6 +1,10 @@
 from urllib.parse import urlparse, urljoin
 from flask import request, url_for
 
+
+ALLOWED_EXTENSIONS = { 'png', 'jpg', 'jpeg', 'gif'}
+
+
 def is_safe_url(target):
     ref_url = urlparse(request.host_url)
     test_url = urlparse(urljoin(request.host_url, target))
@@ -19,3 +23,7 @@ def redirect_back(endpoint, **values):
     if not target or not is_safe_url(target):
         target = url_for(endpoint, **values)
     return redirect(target)
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS

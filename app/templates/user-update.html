@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Informações do usuário{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+    <h1>Nova foto</h1>
+
+{% from "_formhelpers.html" import render_field %}
+    <form method=post enctype=multipart/form-data>
+        <dl>
+            {{ render_field(form.file) }}
+          </dl>
+          <p><input type=submit value=Salvar>
+    </form>
+{% endblock %}

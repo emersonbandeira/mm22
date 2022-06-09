@@ -2,11 +2,13 @@
 <title>{% block title %}{% endblock %} - MM22</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 <nav>
-  <h1>MM22</h1>
+  <h1><a href="{{ url_for('index') }}">MM22</a></h1>
   <ul>
     {% if current_user.is_authenticated %}
+      <img class="user-image" src="./static/uploads/{{current_user.image}}" alt="Image">
       <li><span>{{ current_user.name }} [{{ IP }}]</span>
-      <li><a href="{{ url_for('logout') }}">Log Out</a>
+        <li><a href="{{ url_for('access') }}">Acessos</a>
+        <li><a href="{{ url_for('logout') }}">Log Out</a>
     {% else %}
       <li><a href="{{ url_for('login') }}">Log In</a>
     {% endif %}

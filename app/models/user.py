@@ -13,6 +13,7 @@ class User(Base):
     profile_id = Column(Integer, ForeignKey('profile.id'))
     created = Column(TIMESTAMP)
     activated = Column(TIMESTAMP)
+    image = Column(String)
 
     def __repr__(self):
         return "<User(name='%s', email='%s', public_id='%s')>" % (

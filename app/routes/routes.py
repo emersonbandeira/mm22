@@ -1,3 +1,4 @@
+import os
 import collections
 from ctypes import sizeof
 from tokenize import PlainToken
@@ -5,6 +6,7 @@ from app import app
 from flask import jsonify, request, make_response, render_template, redirect, flash, session, url_for, g, abort, Response
 from flask_mail import Message
 from werkzeug.security import generate_password_hash,check_password_hash
+from werkzeug.utils import secure_filename
 from app.models.profile import Profile
 from config import MY_IP, mysql_session
 import logging
@@ -13,7 +15,7 @@ import jwt
 import datetime
 import uuid
 from flask_login import current_user, login_required, login_user, logout_user
-from sqlalchemy import func
+from sqlalchemy import func, desc
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import matplotlib.pyplot as plt
@@ -22,9 +24,10 @@ import io
 
 from app.models.user import User
 from app.models.access import Access
-from app.forms import RegistrationForm, ProfileForm, LoginForm
+from app.forms import RegistrationForm, ProfileForm, LoginForm, UserUpdateForm
 from app import mail
-from app.utils import get_redirect_target, is_safe_url, redirect_back
+from app.utils import get_redirect_target, is_safe_url, redirect_back, allowed_file
+
 
 
 def token_required(f):
@@ -128,6 +131,8 @@ def register():
           user.created = datetime.datetime.now()
           mysql_session.add(user)
           mysql_session.commit()
+
+          
      
           msg = Message('Usuário cadastrado', sender =   SENDER_MAIL, recipients = [user.email])
           msg.body = "O usuário {} cadastrado pela web em {} informando este email. Para confirmar abra no navegador http://{}:5000{}".format(user.name, user.created, MY_IP, url_for('activation',key=user.public_id))
@@ -138,6 +143,46 @@ def register():
 
      logging.warning('method get')
      return render_template('register.html', form=form)
+
+@app.route('/user-update',methods=['GET','POST'])
+def user_update():
+
+     form = UserUpdateForm(request.form)
+     user = mysql_session.query(User).filter_by(public_id=current_user.get_id()).first()
+
+     IP = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
+
+     if request.method == 'POST' and form.validate():
+
+          if 'file' not in request.files:
+               flash('No file part')
+               return redirect(request.url)
+          file = request.files['file']
+          # If the user does not select a file, the browser submits an
+          # empty file without a filename.
+          if file.filename == '':
+               flash('No selected file')
+               return redirect(request.url)
+          
+          if file and allowed_file(file.filename):
+               image_name = user.public_id + '.'+ file.filename.rsplit('.', 1)[1].lower()
+               file.save(os.path.join(app.config['UPLOAD_FOLDER'], image_name))
+               #user.image = image_name accept_tos
+               #mysql_session.query(User).filter(User.public_id == current_user.get_id()).update({'accept_tos': 1})
+               
+               mysql_session.query(User).filter(User.public_id == current_user.get_id()).update({'image': image_name})
+               #mysql_session.execute(update(User, values={image=imagename}))
+               #mysql_session.add(user)
+               mysql_session.commit()
+
+               
+
+               #return redirect(url_for('user-update.html', name=filename))
+               return render_template('user-update.html', form=form, IP=IP)
+
+          
+
+     return render_template('user-update.html', form=form, IP=IP)
 
 
 @app.route('/profile', methods=['GET','POST'])
@@ -202,8 +247,9 @@ def activation(key):
      return render_template('index.html')
 
 @app.route('/access')
+@login_required
 def access():
-     acessos = mysql_session.query(func.date(Access.timestamped), Access.IP, User.name, func.count(func.date(Access.timestamped))).outerjoin(User).group_by(func.date(Access.timestamped), Access.IP, User.name).all()
+     acessos = mysql_session.query(func.date(Access.timestamped), Access.IP, User.name, func.count(func.date(Access.timestamped))).outerjoin(User).group_by(func.date(Access.timestamped), Access.IP, User.name).order_by(desc(func.date(Access.timestamped))).all()
 
      logging.warning(acessos)
 
@@ -227,14 +273,16 @@ def access():
 
      logging.warning('dias: [{}]'.format(dias))
      
+     IP = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
          
 
-     return render_template('access.html',lista_acessos=lista_acessos)
+     return render_template('access.html',lista_acessos=lista_acessos, IP=IP)
 
 @app.route('/access-graph.png')
+@login_required
 def access_graph():
 
-     acessos = mysql_session.query(func.date(Access.timestamped), func.count(func.date(Access.timestamped))).outerjoin(User).group_by(func.date(Access.timestamped), Access.IP, User.name).all()
+     acessos = mysql_session.query(func.date(Access.timestamped), func.count(func.date(Access.timestamped))).group_by(func.date(Access.timestamped), Access.IP).order_by(desc(func.date(Access.timestamped))).all()
 
      lista_acessos = []
      dias = []
@@ -251,13 +299,11 @@ def access_graph():
           qtd_acessos.append(acesso[1])
           qtd_dias+=1
 
-     ax = plt.subplots()
+     ax = plt.subplots(figsize=(9, 3))
 
      logging.warning('dias: [{}] {}'.format(dias, qtd_dias))
 
-     ind = np.arange(qtd_dias)
-
-     
+     ind = np.arange(qtd_dias)  
 
      plt.bar(ind, qtd_acessos, 0.35, yerr=0, label='Acessos')
 
