@@ -7,6 +7,11 @@ from sqlalchemy.orm import sessionmaker
 from urllib.parse import quote
 import socket
 
+ENGINE_PARM=config('ENGINE_PARM')
+
+def configure_db(pwd):
+    SQLALCHEMY_DATABASE_URI=f"mysql://meme%s@localhost:3306/mm22"
+    ENGINE_PARM=f"mysql://meme:{pwd}@127.0.0.1:3306/mm22"
 
 BASE_DIR=os.path.abspath('.')
 
@@ -21,10 +26,11 @@ MAIL_PASSWORD=config('MAIL_PASSWORD')
 
 DB_PASS=config('DB_PASS')
 
-SQLALCHEMY_DATABASE_URI=('mysql://meme%s@localhost:3306/mm22' % quote(DB_PASS))
+configure_db(DB_PASS)
+
 SQLALCHEMY_TRACK_NOTIFICATIONS=False
 
-engine = create_engine( 'mysql://meme:%s@127.0.0.1:3306/mm22' % quote(DB_PASS) , echo=True, future=True)
+engine = create_engine(ENGINE_PARM, echo=True, future=True)
 
 logging.warning(engine.__module__)
 
