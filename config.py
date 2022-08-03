@@ -10,7 +10,7 @@ import socket
 ENGINE_PARM=config('ENGINE_PARM')
 
 def configure_db(pwd):
-    SQLALCHEMY_DATABASE_URI=f"mysql://meme%s@localhost:3306/mm22"
+    SQLALCHEMY_DATABASE_URI=f"mysql://meme:{pwd}@localhost:3306/mm22"
     ENGINE_PARM=f"mysql://meme:{pwd}@127.0.0.1:3306/mm22"
 
 BASE_DIR=os.path.abspath('.')
