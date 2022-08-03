@@ -19,11 +19,12 @@ SENDER_MAIL=config('SENDER_MAIL')
 MAIL_USERNAME=config('MAIL_USERNAME')
 MAIL_PASSWORD=config('MAIL_PASSWORD')
 
+DB_PASS=config('DB_PASS')
 
-SQLALCHEMY_DATABASE_URI=('mysql://meme%s@localhost:3306/mm22' % quote('badpass'))
+SQLALCHEMY_DATABASE_URI=('mysql://meme%s@localhost:3306/mm22' % quote(DB_PASS))
 SQLALCHEMY_TRACK_NOTIFICATIONS=False
 
-engine = create_engine( 'mysql://meme:%s@127.0.0.1:3306/mm22' % quote('m3m3@@') , echo=True, future=True)
+engine = create_engine( 'mysql://meme:%s@127.0.0.1:3306/mm22' % quote(DB_PASS) , echo=True, future=True)
 
 logging.warning(engine.__module__)
 
