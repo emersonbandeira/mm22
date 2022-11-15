@@ -13,3 +13,6 @@ export FLASK_ENV=development
 export DEBUG=true
 
 export SECRET_KEY="TESTE234"
+
+
+# teste
